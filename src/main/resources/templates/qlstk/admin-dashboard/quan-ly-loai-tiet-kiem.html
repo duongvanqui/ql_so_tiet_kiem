@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>QUẢN LÝ LOẠI TIẾT KIỆM</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+    <link rel="stylesheet" href="/css/shared.css"/>
+    <style>
+        /* ── Page-specific ── */
+        .td-rate {
+            font-family: 'DM Serif Display', serif;
+            font-size: 14px;
+            color: var(--gold);
+            font-weight: 700;
+        }
+        .td-name { font-weight: 600; color: var(--navy); }
+        .td-id   { font-size: 12px; font-weight: 600; color: var(--navy-3); font-family: 'DM Serif Display', serif; }
+        .td-date { font-size: 12.5px; color: var(--gray-2); }
+
+        .chip {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 10px; border-radius: 99px;
+            font-size: 11px; font-weight: 600; letter-spacing: .3px;
+        }
+        .chip-yes { background: rgba(45,125,90,.1);  color: var(--green); }
+        .chip-no  { background: rgba(184,176,164,.15); color: var(--gray-2); }
+
+        /* ── Delete Modal ── */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(11,31,58,.55);
+            backdrop-filter: blur(4px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 50;
+        }
+        .modal-overlay.open { display: flex; }
+
+        .modal-box {
+            background: var(--white);
+            border-radius: 18px;
+            padding: 32px 28px;
+            width: 100%; max-width: 380px;
+            box-shadow: 0 20px 60px rgba(11,31,58,.22);
+            animation: modalIn .2s ease;
+        }
+        @keyframes modalIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+
+        .modal-icon {
+            width: 52px; height: 52px; border-radius: 14px;
+            background: rgba(185,64,64,.1);
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 16px;
+        }
+        .modal-icon .material-icons-outlined { font-size: 26px; color: var(--red); }
+        .modal-title { font-family: 'DM Serif Display', serif; font-size: 19px; color: var(--navy); margin-bottom: 8px; }
+        .modal-desc  { font-size: 13.5px; color: var(--gray-2); line-height: 1.55; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+
+        .btn-cancel {
+            padding: 10px 20px; border-radius: 10px;
+            font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 500;
+            border: 1.5px solid var(--gray-1); color: var(--gray-2);
+            background: none; cursor: pointer; transition: all .2s; text-decoration: none;
+            display: inline-flex; align-items: center;
+        }
+        .btn-cancel:hover { border-color: var(--navy); color: var(--navy); }
+
+        .btn-danger {
+            padding: 10px 20px; border-radius: 10px;
+            font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 600;
+            background: var(--red); color: var(--white);
+            border: none; cursor: pointer; transition: all .2s;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-danger:hover { background: #9e3030; }
+        .btn-danger .material-icons-outlined { font-size: 16px; }
+    </style>
+</head>
+<body>
+
+<!-- ════ SIDEBAR ════ -->
+<aside>
+    <div class="sidebar-logo">
+        <div class="logo-icon"><span class="material-icons-outlined">savings</span></div>
+        <div class="logo-text">VietSave Bank<span>Hệ thống nội bộ</span></div>
+    </div>
+    <nav>
+        <div class="nav-group">
+            <p class="nav-section-label">Chính</p>
+            <a href="/admin" class="nav-item"><span class="material-icons-outlined">dashboard</span>Tổng quan</a>
+            <a href="/admin/mo-so" class="nav-item"><span class="material-icons-outlined">add_circle_outline</span>Mở sổ tiết kiệm</a>
+            <a href="/admin/quan-ly-khach-hang" class="nav-item"><span class="material-icons-outlined">group</span>Quản lý khách hàng</a>
+            <a href="/admin/quan-ly-loai-tiet-kiem" class="nav-item active"><span class="material-icons-outlined">settings_suggest</span>Loại tiết kiệm</a>
+        </div>
+        <div class="nav-group">
+            <p class="nav-section-label">Nghiệp vụ</p>
+            <a href="/admin/giao-dich" class="nav-item"><span class="material-icons-outlined">swap_horiz</span>Giao dịch (Gửi/Rút)</a>
+            <a href="/admin/tra-cuu-so" class="nav-item"><span class="material-icons-outlined">manage_search</span>Tra cứu sổ</a>
+            <a href="/admin/bao-cao-thong-ke" class="nav-item"><span class="material-icons-outlined">bar_chart</span>Báo cáo doanh số</a>
+        </div>
+    </nav>
+</aside>
+
+<!-- ════ MAIN ════ -->
+<main>
+    <header>
+        <h2 class="header-title">Loại tiết kiệm</h2>
+        <a href="/admin/quan-ly-loai-tiet-kiem/them" class="btn-primary">
+            <span class="material-icons-outlined">add</span>
+            Thêm loại mới
+        </a>
+    </header>
+
+    <div class="page-body">
+
+        <!-- Alerts -->
+        <div th:if="${message}" class="alert alert-success" id="alertMessage">
+            <span class="material-icons-outlined">check_circle</span>
+            <span th:text="${message}"></span>
+        </div>
+        <div th:if="${error}" class="alert alert-error" id="alertError">
+            <span class="material-icons-outlined">error_outline</span>
+            <span th:text="${error}"></span>
+        </div>
+
+        <!-- Table -->
+        <div class="table-panel">
+            <div class="table-header">
+                <div class="table-title">Danh sách loại tiết kiệm</div>
+            </div>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Mã</th>
+                        <th>Tên loại</th>
+                        <th>Kỳ hạn</th>
+                        <th>Cho gửi thêm</th>
+                        <th>Cho rút một phần</th>
+                        <th>Lãi suất</th>
+                        <th>Ngày tạo</th>
+                        <th style="text-align:right;">Thao tác</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="loai : ${loaiSoList}">
+                        <td class="td-id"   th:text="${loai.id}"></td>
+                        <td class="td-name" th:text="${loai.tenLoai}"></td>
+                        <td>
+                            <span th:text="${loai.kyHanThang} + ' tháng'"></span>
+                        </td>
+                        <td>
+                            <span th:if="${loai.choGuiThem}"   class="chip chip-yes">✓ Có</span>
+                            <span th:unless="${loai.choGuiThem}" class="chip chip-no">✗ Không</span>
+                        </td>
+                        <td>
+                            <span th:if="${loai.choRutMotPhan}"   class="chip chip-yes">✓ Có</span>
+                            <span th:unless="${loai.choRutMotPhan}" class="chip chip-no">✗ Không</span>
+                        </td>
+                        <td class="td-rate"
+                            th:text="${laiSuatMap[loai.id]} + ' %/năm'"></td>
+                        <td class="td-date"
+                            th:text="${#dates.format(loai.createdAt, 'dd/MM/yyyy')}"></td>
+                        <td>
+                            <div class="action-group">
+                                <button type="button" class="btn-icon btn-icon-del"
+                                        th:attr="data-delete-url=@{'/admin/quan-ly-loai-tiet-kiem/xoa/' + ${loai.id}}"
+                                        onclick="openConfirmModal(this.getAttribute('data-delete-url'))"
+                                        title="Xoá">
+                                    <span class="material-icons-outlined">delete</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <!-- Empty state -->
+                    <tr th:if="${#lists.isEmpty(loaiSoList)}">
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <span class="material-icons-outlined">style</span>
+                                Chưa có loại tiết kiệm nào.
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div><!-- /page-body -->
+
+    <footer>© 2026 Hệ thống quản lý sổ tiết kiệm · Version 1.0.0</footer>
+</main>
+
+<!-- ════ MODAL XÁC NHẬN XOÁ ════ -->
+<div id="confirmModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-icon">
+            <span class="material-icons-outlined">delete_forever</span>
+        </div>
+        <div class="modal-title">Xoá loại tiết kiệm?</div>
+        <div class="modal-desc">Hành động này không thể hoàn tác. Loại tiết kiệm sẽ bị xoá vĩnh viễn khỏi hệ thống.</div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeConfirmModal()">Hủy</button>
+            <a id="confirmDeleteBtn" href="#" class="btn-danger">
+                <span class="material-icons-outlined">delete</span>
+                Xác nhận xoá
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openConfirmModal(deleteUrl) {
+        document.getElementById('confirmDeleteBtn').setAttribute('href', deleteUrl);
+        document.getElementById('confirmModal').classList.add('open');
+    }
+    function closeConfirmModal() {
+        document.getElementById('confirmModal').classList.remove('open');
+    }
+    // Đóng modal khi click ra ngoài
+    document.getElementById('confirmModal').addEventListener('click', function(e) {
+        if (e.target === this) closeConfirmModal();
+    });
+    // Ẩn alert sau 5s
+    setTimeout(function() {
+        ['alertMessage','alertError'].forEach(function(id) {
+            const el = document.getElementById(id);
+            if (el) { el.style.transition='opacity .4s'; el.style.opacity='0'; setTimeout(()=>el.remove(),400); }
+        });
+    }, 5000);
+</script>
+</body>
+</html>
